@@ -2,11 +2,20 @@ module Polynomial where
 
 import Data.Complex 
 import Data.List (dropWhileEnd) 
+import Data.Semigroup
+import Data.Monoid
 
-type Poly = [Complex Double]
+newtype Poly = Poly { unPoly :: [Complex Double] }
+    deriving (Show, Eq)
+
+instance Semigroup Poly where
+    p <> q = compose p q
+
+instance Monoid Poly where
+    mempty = Poly [0 :+ 0, 1 :+ 0] 
 
 eval :: Poly -> (Complex Double -> Complex Double)
-eval cpoly z = sum $ zipWith (*) cpoly zPowers
+eval (Poly cpoly) z = sum $ zipWith (*) cpoly zPowers
     where
         zPowers = iterate (*z) 1 :: [Complex Double]
 
@@ -17,35 +26,39 @@ isComplexZero c = magnitude c < epsilon
         epsilon = 1.0e-12
 
 isPolyZero :: Poly -> Bool
-isPolyZero cpoly = all isComplexZero cpoly 
+isPolyZero (Poly cpoly) = all isComplexZero cpoly 
 
 normalize :: Poly -> Poly
-normalize poly = dropWhileEnd isComplexZero poly
+normalize (Poly poly) = Poly (dropWhileEnd isComplexZero poly)
 
 degree :: Poly -> Int
 degree cpoly = 
     let 
-        normalizedPoly = normalize cpoly
+        (Poly xs) = normalize cpoly
     in 
-        case normalizedPoly of
+        case xs of
             [] -> 0          
-            xs -> length xs - 1
+            _  -> length xs - 1
 
+addLists :: [Complex Double] -> [Complex Double] -> [Complex Double]
+addLists [] ys = ys
+addLists xs [] = xs
+addLists (x:xs) (y:ys) = (x + y) : addLists xs ys
+
+multLists [] _ = []
+multLists (p:ps) qs = 
+    addLists (map (*p) qs) (0 : multLists ps qs)
 
 addPoly :: Poly -> Poly -> Poly
-addPoly [] ys = ys
-addPoly xs [] = xs
-addPoly (x:xs) (y:ys) = (x + y) : addPoly xs ys
+addPoly (Poly xs) (Poly ys) = Poly (addLists xs ys)
 
 scalePoly :: Complex Double -> Poly -> Poly
-scalePoly c poly = map (*c) poly
+scalePoly c (Poly poly) = Poly (map (*c) poly)
 
 multPoly :: Poly -> Poly -> Poly
-multPoly [] _ = []
-multPoly (p:ps) qs = 
-    addPoly (scalePoly p qs) (0 : multPoly ps qs)
+multPoly (Poly ps) (Poly qs) = Poly (multLists ps qs)
 
 compose :: Poly -> Poly -> Poly
-compose p q = normalize (foldr step [] p)
+compose (Poly p) q = normalize (foldr step (Poly []) p)
   where
-    step coeff acc = addPoly [coeff] (multPoly q acc)
+    step coeff acc = addPoly (Poly [coeff]) (multPoly q acc)
