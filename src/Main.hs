@@ -21,3 +21,4 @@ main = do
     let chain = p <> q <> p
     
     print chain
+    print $ eval chain 1
