@@ -1,3 +1,8 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleInstances #-} 
+{-# LANGUAGE UndecidableInstances #-}
+
 module Ring where
 
 import Data.Complex
@@ -11,6 +16,7 @@ class (Eq a) => Ring a where
 
     sub :: a -> a -> a
     sub x y = add x (inv y)
+
 
 infixl 6 <+>, <->
 infixl 7 <.>
@@ -54,3 +60,49 @@ instance (Ring a) => Ring (Complex a) where
         (x1 `mul` x2 `sub` y1 `mul` y2) :+ (x1 `mul` y2 `add` y1 `mul` x2)
     
     one = one :+ zero
+
+class (Ring r, Eq m) => Module r m | m -> r where
+    vadd  :: m -> m -> m
+    vzero :: m
+    vinv  :: m -> m
+    smul  :: r -> m -> m
+
+    vsub  :: m -> m -> m
+    vsub x y = vadd x (vinv y)
+
+infixr 7 ^.^
+infixl 6 ^+^
+infixl 6 ^-^
+
+(^.^) :: (Module r m) => r -> m -> m
+(^.^) = smul
+
+(^+^) :: (Module r m) => m -> m -> m
+(^+^) = vadd
+
+(^-^) :: (Module r m) => m -> m -> m
+(^-^) = vsub
+
+instance Module Int Int where
+    vadd = add
+    vzero = zero
+    vinv = inv
+    smul = mul
+
+instance Module Float Float where
+    vadd = add
+    vzero = zero
+    vinv = inv
+    smul = mul
+
+instance Module Double Double where
+    vadd = add
+    vzero = zero
+    vinv = inv
+    smul = mul
+
+instance (Ring a) => Module a (Complex a) where
+    vadd = add
+    vzero = zero
+    vinv = inv
+    smul r (x :+ y) = (r `mul` x) :+ (r `mul` y)
