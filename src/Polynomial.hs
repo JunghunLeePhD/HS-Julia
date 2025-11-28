@@ -1,51 +1,62 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module Polynomial where
 
-import Data.Complex 
-import Data.List (dropWhileEnd) 
-import Data.Semigroup
-import Data.Monoid
+import Ring
+import Data.List (dropWhileEnd)
 
 newtype Poly a = Poly { unPoly :: [a] }
     deriving (Show)
 
-instance (Eq a, Num a) => Eq (Poly a) where
-    (Poly xs) == (Poly ys) = normalize xs == normalize ys
-      where normalize = dropWhileEnd (== 0)
-
 instance Functor Poly where
     fmap f (Poly xs) = Poly (f <$> xs)
 
-instance (Eq a, Num a) => Num (Poly a) where
-    (+) (Poly xs) (Poly ys) = Poly $ addLists xs ys
-        where
-            addLists [] ys = ys
-            addLists xs [] = xs
-            addLists (x:xs) (y:ys) = (x + y) : addLists xs ys
+normalize :: (Ring a) => [a] -> [a]
+normalize = dropWhileEnd (== zero)
 
-    (*) (Poly xs) (Poly ys) = Poly $ foldr (\x acc -> (x `scale` ys) `add` (0 : acc)) [] xs
-        where
-            scale s = map (*s)
-            add [] ys = ys
-            add xs [] = xs
-            add (x:xs) (y:ys) = (x+y) : add xs ys
+instance (Ring a) => Eq (Poly a) where
+    (Poly xs) == (Poly ys) = normalize xs == normalize ys
 
-    negate (Poly xs) = Poly $ negate <$> xs
+instance (Ring a) => Ring (Poly a) where
+    zero = Poly []
+    one  = Poly [one]
     
-    fromInteger n = Poly [fromInteger n]
+    add (Poly xs) (Poly ys) = Poly $ normalize $ addLists xs ys
+      where
+        addLists [] b = b
+        addLists a [] = a
+        addLists (a:as) (b:bs) = (a <+> b) : addLists as bs
+
+    inv (Poly xs) = Poly $ inv <$> xs
+
+    mul (Poly xs) (Poly ys) = Poly $ normalize $ go xs ys
+      where
+        go _ [] = []
+        go [] _ = []
+        go (a:as) bs = addLists ((mul a) <$> bs) (zero : go as bs)
+        
+        addLists [] b = b
+        addLists a [] = a
+        addLists (x:xs') (y:ys') = (x <+> y) : addLists xs' ys'
+
+instance (Ring a) => Module a (Poly a) where
+    vadd = add
+    vzero = zero
+    vinv = inv
     
-    abs _ = error "abs not supported for Polynomials"
-    signum _ = error "signum not supported for Polynomials"
+    smul c (Poly xs) = Poly $ normalize $ (mul c) <$> xs
 
-eval :: Num a => Poly a -> (a -> a)
-eval (Poly coeffs) = \z -> foldr (\c acc -> c + z * acc) 0 coeffs
+eval :: (Ring a) => Poly a -> (a -> a)
+eval (Poly coeffs) = \z -> foldr (\c acc -> c <+> (z <.> acc)) zero coeffs
 
-compose :: (Num a, Eq a) => Poly a -> Poly a -> Poly a
-compose (Poly p) q = foldr step (Poly [0]) p
+compose :: (Ring a) => Poly a -> Poly a -> Poly a
+compose (Poly coeffs) q = foldr step zero coeffs
   where
-    step coeff acc = Poly [coeff] + (q * acc) 
+    step c acc = (Poly [c]) <+> (q <.> acc)
 
-instance (Num a, Eq a) => Semigroup (Poly a) where
-    p <> q = compose p q
+instance (Ring a) => Semigroup (Poly a) where
+    (<>) = compose
 
-instance (Num a, Eq a) => Monoid (Poly a) where
-    mempty = Poly [0, 1] 
+instance (Ring a) => Monoid (Poly a) where
+    mempty = Poly [zero, one] 

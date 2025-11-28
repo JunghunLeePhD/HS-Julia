@@ -1,48 +1,61 @@
 module Main where
 
 import Ring
+import Polynomial
 import Data.Complex
 
 main :: IO ()
 main = do
-    putStrLn "====== Ring & Module Test ======"
-
-    -- 1. Test Ring Int
-    putStrLn "\n--- 1. Ring Int Test ---"
-    let a = 10 :: Int
-    let b = 3 :: Int
-    putStrLn $ "a = " ++ show a ++ ", b = " ++ show b
-    putStrLn $ "Addition (a <+> b):       " ++ show (a <+> b)
-    putStrLn $ "Subtraction (a <-> b):    " ++ show (a <-> b)
-    putStrLn $ "Multiplication (a <.> b): " ++ show (a <.> b)
-
-    -- 2. Test Module Double over Double
-    -- (A simple scalar field is a module over itself)
-    putStrLn "\n--- 2. Module Double (over Double) ---"
-    let s = 2.5 :: Double    -- Scalar
-    let v = 4.0 :: Double    -- Vector (which is just a number here)
-    putStrLn $ "Scalar s = " ++ show s ++ ", Vector v = " ++ show v
-    putStrLn $ "Scalar Mult (s ^.^ v):     " ++ show (s ^.^ v)
-
-    -- 3. Test Module (Complex Double) over Double
-    -- This is the classic 2D vector space test
-    putStrLn "\n--- 3. Module Complex Double (over Double) ---"
-    let scalar = 2.0 :: Double
-    let v1 = 1.0 :+ 2.0 :: Complex Double -- 1 + 2i
-    let v2 = 3.0 :+ 4.0 :: Complex Double -- 3 + 4i
-
-    putStrLn $ "Scalar r = " ++ show scalar
-    putStrLn $ "Vector v1 = " ++ show v1
-    putStrLn $ "Vector v2 = " ++ show v2
-
-    -- Calculation: r * v1 + v2
-    -- = 2.0 * (1 + 2i) + (3 + 4i)
-    -- = (2 + 4i) + (3 + 4i)
-    -- = 5 + 8i
-    let result = (scalar ^.^ v1) ^+^ v2
+    let logOp desc val = putStrLn $ desc ++ ":\t" ++ show val
     
-    putStrLn $ "Calculation (r ^.^ v1 ^+^ v2): " ++ show result
+    putStrLn "====== Ring, Module & Polynomial Test ======"
+
+    -- 1. Define some Polynomials
+    -- p1 = 1 + 2x
+    let p1 = Poly [1.0, 2.0] :: Poly Double
+    -- p2 = 3 + 4x
+    let p2 = Poly [3.0, 4.0] :: Poly Double
+
+    putStrLn "\n--- Definitions ---"
+    logOp "p1 (1 + 2x)" p1
+    logOp "p2 (3 + 4x)" p2
+
+    -- 2. Ring Operations
+    putStrLn "\n--- Ring Operations ---"
+    -- Addition: (1+3) + (2+4)x = 4 + 6x
+    logOp "Add (p1 <+> p2)" (p1 <+> p2)
     
-    -- Verify Subtraction
-    let subResult = v2 ^-^ v1
-    putStrLn $ "Subtraction (v2 ^-^ v1):      " ++ show subResult
+    -- Multiplication: (1+2x)(3+4x) = 3 + 4x + 6x + 8x^2 = 3 + 10x + 8x^2
+    logOp "Mul (p1 <.> p2)" (p1 <.> p2)
+
+    -- Negation / Inverse
+    logOp "Inv (inv p1)"    (inv p1)
+    
+    -- Subtraction: p2 - p1 = (3-1) + (4-2)x = 2 + 2x
+    logOp "Sub (p2 <-> p1)" (p2 <-> p1)
+
+    -- 3. Module Operations
+    putStrLn "\n--- Module Operations ---"
+    -- Scalar Mult: 10 * (1+2x) = 10 + 20x
+    let scalar = 10.0 :: Double
+    logOp "Scalar (10 ^.^ p1)" (scalar ^.^ p1)
+
+    -- 4. Evaluation
+    putStrLn "\n--- Evaluation ---"
+    -- p1(5) = 1 + 2(5) = 11
+    putStrLn $ "Eval p1 at 5.0:\t" ++ show (eval p1 5.0)
+
+    -- 5. Composition (Monoid)
+    putStrLn "\n--- Composition ---"
+    -- p1(p2(x)) = 1 + 2(3+4x) = 1 + 6 + 8x = 7 + 8x
+    logOp "Compose (p1 <> p2)" (p1 <> p2)
+    
+    -- Identity Check: p1(x) should equal p1
+    -- mempty is 'x' (Poly [0, 1])
+    logOp "Identity (p1 <> mempty)" (p1 <> mempty)
+
+    -- 6. Normalization Check
+    putStrLn "\n--- Normalization ---"
+    let pUnnormalized = Poly [1.0, 2.0, 0.0, 0.0] :: Poly Double
+    logOp "Unnormalized input" pUnnormalized
+    putStrLn $ "Equal to p1?\t" ++ show (pUnnormalized == p1)
