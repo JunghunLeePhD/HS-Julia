@@ -1,10 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE FlexibleInstances #-} 
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE DefaultSignatures #-} 
-{-# LANGUAGE TypeFamilies #-}      
-
 module Ring where
 
 import Data.Complex

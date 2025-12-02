@@ -29,6 +29,13 @@ executable Julia
                     , Orbit
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
+    default-extensions:
+                    MultiParamTypeClasses
+                    FunctionalDependencies
+                    FlexibleInstances
+                    UndecidableInstances
+                    DefaultSignatures
+                    TypeFamilies
     build-depends:    base ^>= 4.17 || ^>= 4.18
                     , mtl
     ghc-options:      -O2
