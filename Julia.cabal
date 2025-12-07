@@ -36,6 +36,7 @@ executable Julia
                     UndecidableInstances
                     DefaultSignatures
                     TypeFamilies
+                    InstanceSigs
     build-depends:    base ^>= 4.17 || ^>= 4.18
                     , mtl
     ghc-options:      -O2
