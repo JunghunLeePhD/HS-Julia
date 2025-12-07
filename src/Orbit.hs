@@ -23,25 +23,29 @@ orbitWithCount p maxIter startZ = take maxIter $ iterate stepFunc initialState
             put (n + 1, w)
         stepFunc = execState stepMonad 
 
-escapeRadius :: Poly (Complex Double) -> Double
-escapeRadius (Poly []) = 2
-escapeRadius (Poly [_]) = 2
+escapeRadius :: (NormedRing a) => Poly a -> Double
 escapeRadius (Poly coeffs) = 
     let 
-        mags = magnitude <$> coeffs
-        leading_term:others = reverse mags
-        bound = 
-            if leading_term == 0 then 2.0 
-            else 1.0 + maximum ((/ leading_term) <$> others)
+        mags = norm <$> coeffs
+        revMags = dropWhile (== 0) (reverse mags)
     in 
-        max 2.0 bound
+        case revMags of
+            [] -> 2.0 
+            [_] -> 2.0 
+            (leadingTerm : others) -> 
+                let 
+                    termRatios = map (/ leadingTerm) others
+                    bound = 1.0 + maximum termRatios
+                in 
+                    max 2.0 bound
 
-escapeTime :: Poly (Complex Double) -> Int -> Complex Double -> Int
+escapeTime :: (NormedRing a) => Poly a -> Int -> a -> Int
 escapeTime p maxIter = go 0
   where
+    bound = escapeRadius p 
     f = appEndo (toEndo p)
-    go :: Int -> Complex Double -> Int
+    
     go i z
-        | i >= maxIter = maxIter
-        | magnitude z > 2.0   = i
-        | otherwise           = go (i + 1) (f z)
+        | i >= maxIter   = maxIter
+        | norm z > bound = i
+        | otherwise      = go (i + 1) (f z)
