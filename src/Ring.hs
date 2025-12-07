@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module Ring where
 
 import Data.Complex
@@ -50,11 +51,31 @@ instance (Ring a) => Ring (Complex a) where
     add (x1 :+ y1) (x2 :+ y2) = (x1 `add` x2) :+ (y1 `add` y2)
     zero = zero :+ zero
     inv (x :+ y) = (inv x) :+ (inv y)
-    
-    mul (x1 :+ y1) (x2 :+ y2) = 
+
+    mul (x1 :+ y1) (x2 :+ y2) =
         (x1 `mul` x2 `sub` y1 `mul` y2) :+ (x1 `mul` y2 `add` y1 `mul` x2)
-    
+
     one = one :+ zero
+
+class (Ring a) => NormedRing a where
+    norm :: a -> Double
+
+instance NormedRing Int where
+    norm :: Int -> Double
+    norm = fromIntegral . abs
+
+instance NormedRing Float where
+    norm :: Float -> Double
+    norm = realToFrac . abs
+
+instance NormedRing Double where
+    norm :: Double -> Double
+    norm = abs
+
+instance (Ring a, RealFloat a) => NormedRing (Complex a) where
+    norm :: (Ring a, RealFloat a) => Complex a -> Double
+    norm = realToFrac . magnitude 
+
 
 class (Ring r, Eq m) => Module r m | m -> r where
     vadd  :: m -> m -> m
