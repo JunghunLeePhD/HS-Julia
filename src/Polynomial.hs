@@ -22,7 +22,7 @@ instance (Ring a) => Eq (Poly a) where
 instance (Ring a) => Ring (Poly a) where
     zero = Poly [zero]
     one  = Poly [one]
-    inv (Poly xs) = Poly (inv <$> xs)
+    neg (Poly xs) = Poly (neg <$> xs)
 
     add (Poly xs) (Poly ys) = mkPoly (addLists xs ys)
       where

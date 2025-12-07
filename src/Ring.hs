@@ -3,77 +3,91 @@ module Ring where
 import Data.Complex
 
 class (Eq a) => Ring a where
-    add  :: a -> a -> a
-    -- Default implementation for types that are instances of Num
+    add :: a -> a -> a
     default add :: Num a => a -> a -> a
     add = (+)
+    {-# INLINE add #-}
 
     zero :: a
     default zero :: Num a => a
     zero = 0
+    {-# INLINE zero #-}
 
-    inv  :: a -> a
-    default inv :: Num a => a -> a
-    inv = negate
+    neg :: a -> a
+    default neg :: Num a => a -> a
+    neg = negate
+    {-# INLINE neg #-}
 
-    mul  :: a -> a -> a
+    mul :: a -> a -> a
     default mul :: Num a => a -> a -> a
     mul = (*)
+    {-# INLINE mul #-}
 
-    one  :: a
+    one :: a
     default one :: Num a => a
     one = 1
+    {-# INLINE one #-}
 
     sub :: a -> a -> a
-    sub x y = add x (inv y)
+    sub x y = add x (neg y)
+    {-# INLINE sub #-}
 
 infixl 6 <+>, <->
 infixl 7 <.>
 
 (<+>) :: (Ring a) => a -> a -> a
 (<+>) = add
+{-# INLINE (<+>) #-}
 
 (<->) :: (Ring a) => a -> a -> a
 (<->) = sub
+{-# INLINE (<->) #-}
 
 (<.>) :: (Ring a) => a -> a -> a
 (<.>) = mul
+{-# INLINE (<.>) #-}
 
--- Simplified Ring Instances
--- Since Int, Float, and Double are instances of Num, 
--- they automatically use the default implementations.
 instance Ring Int
+instance Ring Integer 
 instance Ring Float
 instance Ring Double
 
 instance (Ring a) => Ring (Complex a) where
-    add (x1 :+ y1) (x2 :+ y2) = (x1 `add` x2) :+ (y1 `add` y2)
+    add (x1 :+ y1) (x2 :+ y2) = (x1 <+> x2) :+ (y1 <+> y2)
     zero = zero :+ zero
-    inv (x :+ y) = (inv x) :+ (inv y)
-
-    mul (x1 :+ y1) (x2 :+ y2) =
-        (x1 `mul` x2 `sub` y1 `mul` y2) :+ (x1 `mul` y2 `add` y1 `mul` x2)
-
+    neg (x :+ y) = (neg x) :+ (neg y)
+    
+    mul (x1 :+ y1) (x2 :+ y2) = 
+        (x1 <.> x2 <-> y1 <.> y2) :+ (x1 <.> y2 <+> y1 <.> x2)
+    
     one = one :+ zero
+    
+    {-# INLINE add #-}
+    {-# INLINE neg #-}
+    {-# INLINE mul #-}
 
 class (Ring a) => NormedRing a where
     norm :: a -> Double
 
 instance NormedRing Int where
-    norm :: Int -> Double
     norm = fromIntegral . abs
+    {-# INLINE norm #-}
+
+instance NormedRing Integer where
+    norm = fromIntegral . abs
+    {-# INLINE norm #-}
 
 instance NormedRing Float where
-    norm :: Float -> Double
     norm = realToFrac . abs
+    {-# INLINE norm #-}
 
 instance NormedRing Double where
-    norm :: Double -> Double
     norm = abs
+    {-# INLINE norm #-}
 
 instance (Ring a, RealFloat a) => NormedRing (Complex a) where
-    norm :: (Ring a, RealFloat a) => Complex a -> Double
-    norm = realToFrac . magnitude 
+    norm = realToFrac . magnitude
+    {-# INLINE norm #-}
 
 
 class (Ring r, Eq m) => Module r m | m -> r where
@@ -88,7 +102,7 @@ class (Ring r, Eq m) => Module r m | m -> r where
 
     vinv  :: m -> m
     default vinv :: (r ~ m) => m -> m
-    vinv = inv
+    vinv = neg
 
     smul  :: r -> m -> m
     default smul :: (r ~ m) => r -> m -> m
@@ -120,5 +134,5 @@ instance Module Double Double
 instance (Ring a) => Module a (Complex a) where
     vadd = add
     vzero = zero
-    vinv = inv
+    vinv = neg
     smul r (x :+ y) = (r `mul` x) :+ (r `mul` y)
