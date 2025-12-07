@@ -1,4 +1,3 @@
-{-# LANGUAGE InstanceSigs #-}
 module Ring where
 
 import Data.Complex
