@@ -23,10 +23,10 @@ main = do
     let iterations = 5
     
     -- Run the function
-    let result = orbitWithCount p iterations startZ
+    let result = orbit p iterations startZ :: [Complex Double]
 
     -- Print results nicely
-    mapM_ printStep result
+    mapM_ print result
 
     where
         printStep (n, z) = putStrLn $ "Iter " ++ show n ++ ": " ++ show z
