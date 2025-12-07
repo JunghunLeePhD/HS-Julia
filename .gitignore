@@ -4,3 +4,6 @@
 /.vscode
 *.pdf
 /dist
+/output
+*.mp4
+*.ppm
