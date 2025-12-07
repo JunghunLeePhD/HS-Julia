@@ -3,10 +3,11 @@ module Orbit where
 import Data.Complex
 import Data.Monoid (Endo(appEndo))
 import Polynomial 
+import Ring
 import Control.Monad.State -- Import State and StateT
 import Control.Monad (guard) -- For the conditional check
 
-orbit :: Poly (Complex Double) -> Int -> Complex Double -> [Complex Double]
+orbit :: (Ring a) => Poly a -> Int -> a -> [a]
 orbit p maxIter startZ = take maxIter $ iterate f startZ
     where
         f = appEndo (toEndo p)
