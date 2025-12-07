@@ -13,7 +13,7 @@ orbit p maxIter startZ = take maxIter $ iterate f startZ
         f = appEndo (toEndo p)
 
 -- Note: it is inefficient
-orbitWithCount :: Poly (Complex Double) -> Int -> Complex Double -> [(Int, Complex Double)]
+orbitWithCount :: (Ring a) => Poly a -> Int -> a -> [(Int, a)]
 orbitWithCount p maxIter startZ = take maxIter $ iterate stepFunc initialState
     where
         initialState = (0, startZ)
@@ -21,7 +21,6 @@ orbitWithCount p maxIter startZ = take maxIter $ iterate stepFunc initialState
             (n, z) <- get 
             let w = appEndo (toEndo p) z
             put (n + 1, w)
-        stepFunc :: (Int, Complex Double) -> (Int, Complex Double)
         stepFunc = execState stepMonad 
 
 escapeRadius :: Poly (Complex Double) -> Double
