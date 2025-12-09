@@ -32,4 +32,4 @@ RUN mkdir -p /export
 # CMD Sequence:
 # 1. Run Julia (Generates PPMs in /app/output/ - internal only)
 # 2. Run FFmpeg (Reads /app/output/, writes MP4 to /export/ - mounted to host)
-CMD ["sh", "-c", "julia && ffmpeg -framerate 30 -i output/frame_%04d.ppm -c:v libx264 -pix_fmt yuv420p -y /export/julia_movie.mp4"]
+CMD ["sh", "-c", "julia && ffmpeg -framerate 30 -i output/frame_%04d.png -c:v libx264 -pix_fmt yuv420p -y /export/julia_movie.mp4"]

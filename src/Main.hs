@@ -1,8 +1,10 @@
 module Main where
 
-import System.IO ( hPutStrLn, withFile, IOMode(WriteMode) )
-import Text.Printf (printf, hPrintf)
-import Control.Monad (forM_)
+import Data.Massiv.Array as A hiding (zip, mapM_, mapM, take)
+import Data.Massiv.Array.IO as AIO
+import Data.Word (Word8) 
+
+import Text.Printf (printf)
 import Data.Complex ( cis, Complex(..) )
 import System.Directory (createDirectoryIfMissing)
 
@@ -26,39 +28,36 @@ pixelToComplex x y = (scale :+ 0) * ((xf - w/2) :+ (yf - h/2))
     h  = fromIntegral height
     scale = 4.0 / w
 
-colorToString :: Int -> String
-colorToString steps
-    | steps >= maxIter = "0 0 0"
-    | otherwise        = unwords (show <$> take 3 (iterate (const  steps) 0))
-
-renderFramePPM :: Int -> Complex Double -> IO ()
-renderFramePPM frameIndex c = do
-    let filename = printf "output/frame_%04d.ppm" frameIndex
+renderFrameMassiv :: Int -> Complex Double -> IO ()
+renderFrameMassiv frameIndex c = do
+    let filename = printf "output/frame_%04d.png" frameIndex
     putStrLn $ "Rendering " ++ filename ++ "..."
 
-    withFile filename WriteMode $ \h -> do
-        hPutStrLn h "P3"
-        hPrintf h "%d %d\n" width height
-        hPutStrLn h "255"
+    let poly = Poly [c, 0, 1] :: Poly (Complex Double)
 
-        let poly = Poly [c, 0, 1] :: Poly(Complex Double)
+    let img :: Image S (SRGB NonLinear) Word8
+        img = A.makeArrayR S Par (Sz (height :. width)) $ \(y :. x) ->
+            let z = pixelToComplex x y
+                t = escapeTime poly maxIter z
+                val = fromIntegral t :: Word8
+            in
+                if t >= maxIter
+                then PixelSRGB 0 0 0
+                else PixelSRGB val val val
 
-        forM_ [0 .. height - 1] $ \y -> do
-            forM_ [0 .. width - 1] $ \x -> do
-                let z = pixelToComplex x y
-                let t = escapeTime poly maxIter z
-                hPutStrLn h (colorToString t)
+    writeImage filename img
+
 
 main :: IO ()
 main = do
     createDirectoryIfMissing True "output"
 
-    let totalFrames = 300
+    let totalFrames = 240
     let radius = 0.7885
     let angles = [0, (2 * pi / fromIntegral totalFrames) .. (2 * pi)]
 
     let params = zip [0..] (take totalFrames angles)
 
-    mapM_ (\(idx, angle) -> renderFramePPM idx (radius * cis angle)) params
+    mapM_ (\(idx, angle) -> renderFrameMassiv idx (radius * cis angle)) params
 
     putStrLn "Done. Run FFmpeg."

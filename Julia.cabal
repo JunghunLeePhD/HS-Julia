@@ -37,9 +37,15 @@ executable Julia
                     DefaultSignatures
                     TypeFamilies
                     InstanceSigs
+                    DataKinds
+
     build-depends:    base ^>= 4.17 || ^>= 4.18
                     , mtl
                     , directory
-    ghc-options:      -O2
+                    , massiv
+                    , massiv-io
+
+    ghc-options:      -O2 -threaded -rtsopts -with-rtsopts=-N
+    
     hs-source-dirs:   src
     default-language: Haskell2010
