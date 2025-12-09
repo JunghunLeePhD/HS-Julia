@@ -19,9 +19,9 @@
 
 To run this application locally, you will need the following installed on your machine:
 
+* **Docker**: It is recommended to use [Docker](https://www.docker.com/products/docker-desktop/) to run the application in a containerized environment.
 * **Haskell Toolchain**: It is recommended to use [GHCup](https://www.haskell.org/ghcup/) to install GHC (Glasgow Haskell Compiler) and Cabal (Common Architecture for Building Applications and Libraries).
 * **Git**: To clone the repository.
-* **Docker** (Optional): If you prefer to run the application in a containerized environment.
 
 ## 📥 Installation
 
