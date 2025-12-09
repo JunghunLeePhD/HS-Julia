@@ -10,8 +10,8 @@
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [How to Run](#how-to-run)
-  - [Using Cabal (Recommended)](#using-cabal-recommended)
-  - [Using Docker](#using-docker)
+  - [Using Docker (Recommended)](#using-docker)
+  - [Using Cabal](#using-cabal-recommended)
 - [File Structure](#file-structure)
 - [License](#license)
 
@@ -33,9 +33,23 @@ To run this application locally, you will need the following installed on your m
 
 ## 🚀 How to Run
 
-You can run the program using either Cabal directly or Docker.
+You can run the program using either Docker or Cabal directly.
 
-### Using Cabal (Recommended)
+### Using Docker (Recommended)
+
+The repository includes a `Dockerfile`, allowing you to build and run the application without installing Haskell locally.
+
+1.  **Build the Docker image:**
+    ```bash
+    docker build -t hs-julia .
+    ```
+
+2.  **Run the container:**
+    ```bash
+    docker run -it --rm -v "$(pwd):/export" hs-julia
+    ```
+
+### Using Cabal 
 
 1.  **Update your package list:**
     ```bash
@@ -48,23 +62,14 @@ You can run the program using either Cabal directly or Docker.
     cabal build
     ```
 
-3.  **Run the application:**
+3.  **Run the application for `output/*.ppm` files:**
     ```bash
     cabal run
     ```
 
-### Using Docker
-
-The repository includes a `Dockerfile`, allowing you to build and run the application without installing Haskell locally.
-
-1.  **Build the Docker image:**
+4. **Run ffmpeg for `julia_movie.mp4` file:**
     ```bash
-    docker build -t hs-julia .
-    ```
-
-2.  **Run the container:**
-    ```bash
-    docker run -it --rm -v "$(pwd):/export" hs-julia
+    ffmpeg -framerate 30 -i output/frame_%04d.ppm -c:v libx264 -pix_fmt yuv420p -y julia_movie.mp4
     ```
 
 ## 📂 File Structure
@@ -127,4 +132,4 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
-Created by [*Junghun Lee, PhD*](https://www.google.com/search?q=https://github.com/JunghunLeePhD)
+Created by [*Junghun Lee, PhD*](https://github.com/JunghunLeePhD)
