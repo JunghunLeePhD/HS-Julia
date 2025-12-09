@@ -62,4 +62,3 @@ main = do
     mapM_ (\(idx, angle) -> renderFramePPM idx (radius * cis angle)) params
 
     putStrLn "Done. Run FFmpeg."
-    putStrLn "ffmpeg -framerate 30 -i output/frame_%04d.ppm -c:v libx264 -pix_fmt yuv420p julia_movie.mp4"
